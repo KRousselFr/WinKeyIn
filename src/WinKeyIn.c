@@ -1,7 +1,7 @@
 /**
  * \file WinKeyIn.c
  *
- * Programme de frappe automatique de touches du clavier sous Windows NT.
+ * Programme de "frappe" automatique de touches du clavier sous Windows NT.
  */
 
 #define _WIN32_WINNT  0x0500
@@ -36,7 +36,7 @@ static const WCHAR* FMT_MSG_A_PROPOS =
 /* == Autres constantes == */
 
 /* taille maximale d'un message affiché par ce programme */
-static const unsigned TAILLE_MAX_MSG = 1024U;
+static const unsigned TAILLE_MAX_MSG = 4096U;
 
 /* taille de la fenêtre */
 static const int LARGEUR_FENETRE = 320 ;
@@ -51,8 +51,8 @@ static const UINT DELAI_EVNTS_CLAVIER = 1000U ;
 
 /* liste des touches à "déclencher" ('virtual key codes') */
 static const WORD VIRTKEYS[] = {
-		VK_RSHIFT   /* la touche Shift est pressée puis immédiatement
-		               relâchée, ce qui ne devrait avoir aucun effet visible */
+		VK_ATTN   /* la touche 'Pause' est pressée puis immédiatement
+		             relâchée, ce qui ne devrait avoir aucun effet visible */
 };
 
 
@@ -70,11 +70,6 @@ static volatile BOOL in_error = FALSE;
 /*========================================================================*/
 /*                               FONCTIONS                                */
 /*========================================================================*/
-
-/* === MACROS === */
-
-#define MOUSEEVENTF_MOVE_NOCOALESCE  0x2000
-
 
 /* === FONCTIONS UTILITAIRES "PRIVEES" === */
 
@@ -118,7 +113,7 @@ MsgErreurSys (const WCHAR* fmtMsg)
 
 /* === FONCTIONS "PUBLIQUES" === */
 
-/* fonction appelée par le "timer" de la souris */
+/* fonction appelée par le "timer" des "frappes" clavier */
 VOID CALLBACK
 KeyTimerProc (HWND hwnd,
               UINT uMsg,
@@ -149,7 +144,7 @@ KeyTimerProc (HWND hwnd,
 		inpMsgs[rel].ki.dwFlags = KEYEVENTF_KEYUP ;
 	}
 
-	/* génère les évènementq clavier voulus */
+	/* génère les évènements clavier voulus */
 	UINT inpSent = SendInput (nbEvnts, inpMsgs, sizeof(INPUT)) ;
 	if (inpSent < nbEvnts) {
 		MsgErreurSys (L"Echec de SendInput() !") ;
@@ -157,7 +152,7 @@ KeyTimerProc (HWND hwnd,
 	}
 }
 
-/* fonction de gestion des messages de la fen�tre principale du programme */
+/* fonction de gestion des messages de la fenêtre principale du programme */
 LRESULT CALLBACK
 MainWndProc (HWND hwnd,
              UINT message,
@@ -267,7 +262,7 @@ WinMain (HINSTANCE hInstance,
 		return -1 ;
 	}
 
-	/* création du "timer" générant les évènements de mouvement de souris */
+	/* création du "timer" générant les évènements de frappe au clavier */
 	UINT_PTR idTmr = SetTimer (main_window,
 	                           ID_EVNT_TIMER_CLAVIER,
 	                           DELAI_EVNTS_CLAVIER,
