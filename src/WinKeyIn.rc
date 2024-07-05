@@ -4,14 +4,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Icon
 
-ID_ICO_WIN_KEY_IN       ICON    DISCARDABLE     "WinKeybd.ico"
+ID_ICO_WIN_KEY_IN       ICON            "WinKeybd.ico"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Version information
 
 VS_VERSION_INFO VERSIONINFO
-	FILEVERSION    0,7,0,0
-	PRODUCTVERSION 0,7,0,0
+	FILEVERSION    0,7,7,0
+	PRODUCTVERSION 0,7,7,0
 {
 	BLOCK "StringFileInfo"
 	{
@@ -19,11 +19,11 @@ VS_VERSION_INFO VERSIONINFO
 		{
 			VALUE "CompanyName",        "\0"
 			VALUE "FileDescription",    "Frappes clavier automatiques Windows NT\0"
-			VALUE "FileVersion",        "0.7.0.0\0"
+			VALUE "FileVersion",        "0.7.7.0\0"
 			VALUE "LegalCopyright",     "(c) 2024 KR\0"
 			VALUE "OriginalFilename",   "WinKeyIn.exe\0"
 			VALUE "ProductName",        "Frappes clavier automatiques Windows NT\0"
-			VALUE "ProductVersion",     "0.7.0.0\0"
+			VALUE "ProductVersion",     "0.7.7.0\0"
 		}
 	}
 	BLOCK "VarFileInfo"

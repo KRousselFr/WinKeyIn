@@ -11,6 +11,7 @@
 #include <stdio.h>
 
 #include <windows.h>
+#include <shellapi.h>
 
 #include "resource.h"
 
@@ -24,19 +25,27 @@
  *
  * Version courante du programme WinKeyIn.
  */
-#define VERSION_PRG  L"0.7.0 du 30/06/2024"
+#define VERSION_PRG  L"0.7.7 du 03/07/2024"
 
 /* == Messages affichés == */
 
-static const WCHAR* CLASSE_FENETRE = L"WinKeyIn";
-static const WCHAR* TITRE_PRG = L"WinKeyIn";
+static const WCHAR* TITRE_PRG =
+		L"Frappes clavier automatiques Windows NT" ;
 static const WCHAR* FMT_MSG_A_PROPOS =
-		L"WinKeyIn version %ls.";
+		L"WinKeyIn version %ls." ;
+static const WCHAR* FMT_MSG_ECHEC_FNCT =
+		L"Échec de %ls : erreur no. %lu !" ;
+static const WCHAR* ENTETE_MSG_ERR_SYS =
+		L"\n Message d'erreur système : " ;
+
 
 /* == Autres constantes == */
 
+/* Nom de classe de fenêtre (ne pas traduire !) */
+static const WCHAR* CLASSE_FENETRE = L"WinKeyIn" ;
+
 /* taille maximale d'un message affiché par ce programme */
-static const unsigned TAILLE_MAX_MSG = 4096U;
+static const unsigned TAILLE_MAX_MSG = 4096U ;
 
 /* taille de la fenêtre */
 static const int LARGEUR_FENETRE = 320 ;
@@ -53,7 +62,7 @@ static const UINT DELAI_EVNTS_CLAVIER = 1000U ;
 static const WORD VIRTKEYS[] = {
 		VK_ATTN   /* la touche 'Pause' est pressée puis immédiatement
 		             relâchée, ce qui ne devrait avoir aucun effet visible */
-};
+} ;
 
 
 /*========================================================================*/
@@ -74,12 +83,13 @@ static volatile BOOL in_error = FALSE;
 /* === FONCTIONS UTILITAIRES "PRIVEES" === */
 
 static DWORD
-MsgErreurSys (const WCHAR* fmtMsg)
+MsgErreurSys (const WCHAR* nomFnct)
 {
 	DWORD codeErr = GetLastError () ;
 	if (codeErr == 0) return 0 ;
 	WCHAR msgErr[TAILLE_MAX_MSG] ;
-	swprintf (msgErr, TAILLE_MAX_MSG, fmtMsg, codeErr) ;
+	swprintf (msgErr, TAILLE_MAX_MSG,
+	          FMT_MSG_ECHEC_FNCT, nomFnct, codeErr) ;
 	/* essaie d'obtenir une description de l'erreur en question */
 	LPWSTR ptrMsgSys;
 	DWORD res = FormatMessageW (FORMAT_MESSAGE_ALLOCATE_BUFFER
@@ -92,7 +102,7 @@ MsgErreurSys (const WCHAR* fmtMsg)
 	                            0,
 	                            NULL) ;
 	if (res != 0) {
-		wcscat (msgErr, L"\n Message d'erreur système : ") ;
+		wcscat (msgErr, ENTETE_MSG_ERR_SYS) ;
 		wcsncat (msgErr, ptrMsgSys,
 		         TAILLE_MAX_MSG - wcslen(msgErr)) ;
 		LocalFree (ptrMsgSys) ;
@@ -147,7 +157,7 @@ KeyTimerProc (HWND hwnd,
 	/* génère les évènements clavier voulus */
 	UINT inpSent = SendInput (nbEvnts, inpMsgs, sizeof(INPUT)) ;
 	if (inpSent < nbEvnts) {
-		MsgErreurSys (L"Echec de SendInput() !") ;
+		MsgErreurSys (L"SendInput()") ;
 		return ;
 	}
 }
@@ -232,7 +242,7 @@ WinMain (HINSTANCE hInstance,
 	                                    MAKEINTRESOURCEW (ID_ICO_WIN_KEY_IN)) ;
 
 	if (!RegisterClassExW (&wndClass)) {
-		MsgErreurSys (L"Echec de RegisterClass() !") ;
+		MsgErreurSys (L"RegisterClass()") ;
 		return -1 ;
 	}
 
@@ -250,7 +260,7 @@ WinMain (HINSTANCE hInstance,
 	                               hInstance,
 	                               NULL) ;
 	if (main_window == NULL) {
-		MsgErreurSys (L"Echec de CreateWindow() !") ;
+		MsgErreurSys (L"CreateWindowEx()") ;
 		return -1 ;
 	}
 
@@ -258,9 +268,22 @@ WinMain (HINSTANCE hInstance,
 	ShowWindow (main_window, nShowCmd) ;
 	BOOL ok = UpdateWindow (main_window) ;
 	if (!ok) {
-		MsgErreurSys (L"Echec de UpdateWindow() !") ;
+		MsgErreurSys (L"UpdateWindow()") ;
 		return -1 ;
 	}
+
+	/* créé une icône pour la zone de notification */
+	NOTIFYICONDATAW nid;
+	ZeroMemory (&nid, sizeof(NOTIFYICONDATAW)) ;
+	nid.cbSize = NOTIFYICONDATAW_V2_SIZE ;   /* valeur pour Windows 2000 */
+	nid.hWnd   = main_window ;
+	nid.uID    = ID_ICO_WIN_KEY_IN ;
+	nid.uFlags = NIF_ICON | NIF_TIP ;
+	nid.hIcon  = wndClass.hIconSm ;
+	wcsncpy (nid.szTip, TITRE_PRG, 128) ;
+
+	/* ajoute l'icône à la zone de notification */
+	Shell_NotifyIconW (NIM_ADD, &nid) ;   /* inutile de réagir en cas d'échec */
 
 	/* création du "timer" générant les évènements de frappe au clavier */
 	UINT_PTR idTmr = SetTimer (main_window,
@@ -268,7 +291,7 @@ WinMain (HINSTANCE hInstance,
 	                           DELAI_EVNTS_CLAVIER,
 	                           KeyTimerProc) ;
 	if (idTmr == 0U) {
-		MsgErreurSys (L"Echec de SetTimer() !") ;
+		MsgErreurSys (L"SetTimer()") ;
 		return -1 ;
 	}
 
@@ -289,8 +312,10 @@ WinMain (HINSTANCE hInstance,
 
 	/* teste si une erreur est survenue */
 	if (res == -1) {
-		MsgErreurSys (L"Echec de GetMessage() !") ;
+		MsgErreurSys (L"GetMessage()") ;
 	}
+
+	Shell_NotifyIconW (NIM_DELETE, &nid) ;
 
 	/* programme terminé */
 	return (int) msg.wParam ;
