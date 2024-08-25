@@ -25,7 +25,7 @@
  *
  * Version courante du programme WinKeyIn.
  */
-#define VERSION_PRG  L"0.7.7 du 03/07/2024"
+#define VERSION_PRG  L"0.7.7 du 25/08/2024"
 
 /* == Messages affichés == */
 
@@ -55,7 +55,7 @@ static const int HAUTEUR_FENETRE = 200 ;
 static const UINT_PTR ID_EVNT_TIMER_CLAVIER = 0x5059454B ;
                                               /* chaîne 'KEYP' en hexa */
 /* délai entre deux séquences de frappes de touches (en millisecondes) */
-static const UINT DELAI_EVNTS_CLAVIER = 1000U ;
+static const UINT DELAI_EVNTS_CLAVIER = 10000U ;
 
 
 /* liste des touches à "déclencher" ('virtual key codes') */
